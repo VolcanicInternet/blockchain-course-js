@@ -1,6 +1,6 @@
-# Blockchain PoC
+# Blockchain Course
 
-This is a simple PoC implementing a Blockchain network on top of JavaScript.
+In this course, we will start by implementing a simple Blockchain network PoC (Proof of Concept), on top of JavaScript.
 
 # Prerequisites
 

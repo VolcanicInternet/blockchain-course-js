@@ -17,6 +17,17 @@ const SHA256 = require("crypto-js/sha256");
  * The Block class, intended to format the block object.
  */
 class Block {
+  /** @type {number} */
+  index;
+  /** @type {number} */
+  timestamp;
+  /** @type {unknown} */
+  data;
+  /** @type {string|undefined} */
+  previousHash;
+  /** @type {string} */
+  hash;
+
   /**
    * Creates a Block.
    *
@@ -25,26 +36,43 @@ class Block {
    * @param {unknown} [data] A JSON object with any type of data associated to this block.
    * @param {string|undefined} [previousHash] To ensure the integrity on the blockchain.
    */
-  constructor(index, timestamp, data, previousHash) {}
+  constructor(index, timestamp, data, previousHash) {
+    this.index = index;
+    this.timestamp = timestamp;
+    this.data = data;
+    this.previousHash = previousHash;
+    this.hash = this.calculateHash();
+  }
 
   /**
    * @returns {string} The SHA256 calculated hash
    * of the entire block data.
    */
-  calculateHash() {}
+  calculateHash() {
+    return SHA256(
+      `${this.index}${this.timestamp}${JSON.stringify(this.data)}${
+        this.previousHash
+      }`
+    ).toString();
+  }
+
+  regenerateHash() {
+    this.hash = this.calculateHash();
+  }
 }
 
 /**
  * The Blockchain class, containing the chain array of `Blocks`.
  */
 class Blockchain {
-  // let chain: Array<Block> = [];
+  /** @type {Block[]} */
+  chain;
 
   /**
    * Initializes de chain with a genesis block.
    */
   constructor() {
-    console.log("=== The Blockchain constructor has been called. ===");
+    this.chain = [this.createGenesisBlock()];
   }
 
   /**
@@ -54,12 +82,18 @@ class Blockchain {
    *
    * @returns {Block} The genesis block.
    */
-  createGenesisBlock() {}
+  createGenesisBlock() {
+    const genesisBlock = new Block(0, Date.now());
+    return Object.freeze(genesisBlock);
+  }
 
   /**
    * @returns {Block} The latest block of the chain.
    */
-  getLatestBlock() {}
+  getLatestBlock() {
+    // @ts-ignore
+    return this.chain.at(-1);
+  }
 
   /**
    * Receives a new block as a parameter and
@@ -67,7 +101,12 @@ class Blockchain {
    *
    * @param {Block} newBlock A Block object containing the new block.
    */
-  addBlock(newBlock) {}
+  addBlock(newBlock) {
+    newBlock.previousHash = this.getLatestBlock().hash;
+    newBlock.regenerateHash();
+
+    this.chain.push(Object.freeze(newBlock));
+  }
 
   /**
    * Checks if this `Blockchain` is valid by iterating all elements
@@ -78,7 +117,26 @@ class Blockchain {
    *
    * @returns {boolean}
    */
-  isChainValid() {}
+  isChainValid() {
+    return this.chain.every((block, index, chain) => {
+      // Skip the genesis block.
+      if (index === 0) return true;
+
+      if (block.hash !== block.calculateHash()) return false;
+
+      const previousBlock = chain[index - 1];
+      return previousBlock.hash === block.previousHash;
+    });
+  }
 }
 
-const volcanicBlockchain = new Blockchain();
+const fuetChain = new Blockchain();
+
+const block1 = new Block(1, Date.now(), { type: "Espetec" });
+fuetChain.addBlock(block1);
+
+const block2 = new Block(2, Date.now(), { type: "Secallona" });
+fuetChain.addBlock(block2);
+
+console.table(fuetChain.chain);
+console.log("Is chain valid?", fuetChain.isChainValid());

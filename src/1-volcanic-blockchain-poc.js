@@ -81,4 +81,4 @@ class Blockchain {
   isChainValid() {}
 }
 
-let volcanicBlockchain = new Blockchain();
+const volcanicBlockchain = new Blockchain();
